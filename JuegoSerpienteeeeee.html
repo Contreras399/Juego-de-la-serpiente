@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de la Serpiente</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #282c34;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            background-color: #333;
+            display: block;
+            margin: 0 auto;
+        }
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="score">Puntuación: 0</div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("score");
+
+        const anchoCelda = 20;
+        let serpiente = [{ x: 100, y: 100 }];
+        let comida = {};
+        let direccion = "Derecha";
+        let puntaje = 0;
+
+        // Genera la comida en una posición aleatoria
+        function generarComida() {
+            const maxX = canvas.width / anchoCelda;
+            const maxY = canvas.height / anchoCelda;
+            comida = {
+                x: Math.floor(Math.random() * maxX) * anchoCelda,
+                y: Math.floor(Math.random() * maxY) * anchoCelda
+            };
+        }
+
+        // Dibuja la serpiente y la comida
+        function dibujar() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Dibuja la serpiente
+            serpiente.forEach(parte => {
+                ctx.fillStyle = "cadetblue";
+                ctx.fillRect(parte.x, parte.y, anchoCelda, anchoCelda);
+            });
+
+            // Dibuja la comida
+            ctx.fillStyle = "aliceblue";
+            ctx.fillRect(comida.x, comida.y, anchoCelda, anchoCelda);
+        }
+
+        // Actualiza la posición de la serpiente
+        function moverSerpiente() {
+            const cabeza = { ...serpiente[0] };
+
+            switch (direccion) {
+                case "Arriba":
+                    cabeza.y -= anchoCelda;
+                    break;
+                case "Abajo":
+                    cabeza.y += anchoCelda;
+                    break;
+                case "Izquierda":
+                    cabeza.x -= anchoCelda;
+                    break;
+                case "Derecha":
+                    cabeza.x += anchoCelda;
+                    break;
+            }
+
+            serpiente.unshift(cabeza);
+
+            // Si la serpiente come la comida
+            if (cabeza.x === comida.x && cabeza.y === comida.y) {
+                puntaje += 10;
+                scoreElement.textContent = `Puntuación: ${puntaje}`;
+                generarComida();
+            } else {
+                serpiente.pop();
+            }
+        }
+
+        // Detecta colisiones
+        function detectarColision() {
+            const cabeza = serpiente[0];
+
+            // Colisión con bordes
+            if (
+                cabeza.x < 0 ||
+                cabeza.y < 0 ||
+                cabeza.x >= canvas.width ||
+                cabeza.y >= canvas.height
+            ) {
+                alert(`¡Has perdido! Puntuación: ${puntaje}`);
+                reiniciarJuego();
+            }
+
+            // Colisión con el propio cuerpo
+            for (let i = 1; i < serpiente.length; i++) {
+                if (cabeza.x === serpiente[i].x && cabeza.y === serpiente[i].y) {
+                    alert(`¡Has perdido! Puntuación: ${puntaje}`);
+                    reiniciarJuego();
+                }
+            }
+        }
+
+        // Reinicia el juego
+        function reiniciarJuego() {
+            serpiente = [{ x: 100, y: 100 }];
+            direccion = "Derecha";
+            puntaje = 0;
+            scoreElement.textContent = `Puntuación: ${puntaje}`;
+            generarComida();
+        }
+
+        // Maneja los controles del teclado
+        document.addEventListener("keydown", e => {
+            switch (e.key) {
+                case "ArrowUp":
+                    if (direccion !== "Abajo") direccion = "Arriba";
+                    break;
+                case "ArrowDown":
+                    if (direccion !== "Arriba") direccion = "Abajo";
+                    break;
+                case "ArrowLeft":
+                    if (direccion !== "Derecha") direccion = "Izquierda";
+                    break;
+                case "ArrowRight":
+                    if (direccion !== "Izquierda") direccion = "Derecha";
+                    break;
+            }
+        });
+
+        // Bucle principal del juego
+        function juego() {
+            moverSerpiente();
+            detectarColision();
+            dibujar();
+        }
+
+        // Inicialización
+        function iniciarJuego() {
+            generarComida();
+            setInterval(juego, 100);
+        }
+
+        iniciarJuego();
+    </script>
+</body>
+</html>
